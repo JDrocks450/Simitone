@@ -22,7 +22,7 @@ namespace Simitone.Client.UI.Panels
         public UINeighbourhoodSwitcher(UINeighborhoodSelectionPanel panel, ushort mode, bool moveIn)
         {
             Panel = panel;
-            SetMode(mode, moveIn);
+            SetMode(mode, moveIn);            
         }
 
         public void SetMode(ushort mode, bool moveIn)
@@ -71,6 +71,12 @@ namespace Simitone.Client.UI.Panels
                 btn.Position = new Microsoft.Xna.Framework.Vector2(UIScreen.Current.ScreenWidth - (17+96) + 48, 14 + 110 * i + 48);
                 i++;
             }
+        }
+
+        public override void GameResized()
+        {
+            base.GameResized();
+            LayBtns();
         }
 
         private UIElasticButton AddBtn(List<UIElasticButton> targ, string imgname, ButtonClickDelegate onClick)

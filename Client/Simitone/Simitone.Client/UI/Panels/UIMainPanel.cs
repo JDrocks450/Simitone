@@ -283,10 +283,17 @@ namespace Simitone.Client.UI.Panels
         public void SetSubpanelPickup(float opacity)
         {
             //used to hide subpanels to make way for the PickupPanel
-            if (SubPanel != null) GameFacade.Screens.Tween.To(SubPanel, 0.3f, new Dictionary<string, float>() { { "Opacity", opacity } }, TweenQuad.EaseOut);
+            if (SubPanel != null)
+            {
+                GameFacade.Screens.Tween.To(SubPanel, 0.3f, new Dictionary<string, float>() { { "Opacity", opacity } }, TweenQuad.EaseOut);
+                SubPanel.Visible = opacity == 0 ? false : true;
+            }
             GameFacade.Screens.Tween.To(Switcher.MainButton, 0.3f, new Dictionary<string, float>() { { "Opacity", opacity } }, TweenQuad.EaseOut);
             GameFacade.Screens.Tween.To(Game.LotControl.PickupPanel, 0.3f, new Dictionary<string, float>() { { "Opacity", 1-opacity } }, TweenQuad.EaseOut);
-            if (opacity == 0) Switcher.Close();
+            if (opacity == 0)
+            {
+                Switcher.Close();
+            }
         }
 
         private void UpdateWidth()

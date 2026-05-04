@@ -31,6 +31,10 @@ namespace Simitone.Client
     /// </summary>
     public class SimitoneGame : FSO.Common.Rendering.Framework.Game
     {
+        //** if the window is resized below this value, UI elements can attempt to resize to available space below 0px -- resulting in immediate crash
+        // we should ensure a minimum width and height of at least the smallest supported resolution by the UI.
+        const int MIN_WIDTH = 800, MIN_HEIGHT = 600;
+        
         public UILayer uiLayer;
         public _3DLayer SceneMgr;
         private bool HasUpdated;
@@ -57,7 +61,7 @@ namespace Simitone.Client
             }
 
             this.Window.AllowUserResizing = true;
-            this.Window.ClientSizeChanged += new EventHandler<EventArgs>(Window_ClientSizeChanged);
+            this.Window.ClientSizeChanged += new EventHandler<EventArgs>(Window_ClientSizeChanged);            
 
             Thread.CurrentThread.Name = "Game";
 
@@ -69,8 +73,8 @@ namespace Simitone.Client
             if (newChange || !GlobalSettings.Default.Windowed || FSOEnvironment.SoftwareKeyboard) return;
             if (Window.ClientBounds.Width == 0 || Window.ClientBounds.Height == 0) return;
             newChange = true;
-            var width = Math.Max(1, Window.ClientBounds.Width);
-            var height = Math.Max(1, Window.ClientBounds.Height);
+            var width = Math.Max(MIN_WIDTH, Window.ClientBounds.Width);
+            var height = Math.Max(MIN_HEIGHT, Window.ClientBounds.Height);
             Graphics.PreferredBackBufferWidth = width;
             Graphics.PreferredBackBufferHeight = height;
             Graphics.ApplyChanges();

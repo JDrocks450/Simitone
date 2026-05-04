@@ -24,6 +24,7 @@ namespace Simitone.Client.UI.Model
         public Color BtnDisable = new Color(128, 128, 128, 255);
 
         public Color ActiveSelection = Color.Yellow;
+        public Color HoverSelection = Color.White * .5f;
 
         public Color Text = Color.White;
         public Color SecondaryText = new Color(0, 255, 128, 255);
@@ -35,6 +36,8 @@ namespace Simitone.Client.UI.Model
         public Color BtnTxt = new Color(0, 31, 63);
         public Color GreenBtnTxt = new Color(0, 63, 16);
         public Color BtnTxtShadow = Color.White * 0.5f;
+        public Color BtnPrimaryHighlight = Color.DarkGreen; // UIBigButton green colorway hilite
+        public Color BtnNormalHighlight = Color.DarkBlue; // UIBigButton normal colorway hilite
 
         public Color PosMoney = new Color(0, 255, 128, 255);
         public Color NegMoney = new Color(255, 128, 0, 255);

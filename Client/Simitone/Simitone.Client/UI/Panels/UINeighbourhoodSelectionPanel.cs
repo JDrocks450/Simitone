@@ -1,26 +1,27 @@
-﻿using FSO.Client.UI.Controls;
+﻿using FSO.Client;
+using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
+using FSO.Common;
 using FSO.Common.Rendering.Framework.IO;
+using FSO.Common.Rendering.Framework.Model;
+using FSO.Common.Utils;
+using FSO.Content;
 using FSO.Content.Framework;
 using FSO.Content.Model;
 using FSO.Files.Formats.IFF.Chunks;
+using FSO.Files.RC;
+using FSO.HIT;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
+using Simitone.Client.UI.Controls;
+using Simitone.Client.Utils;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using FSO.Common.Rendering.Framework.Model;
-using FSO.HIT;
-using FSO.Client;
-using FSO.Content;
-using FSO.Common.Utils;
-using Simitone.Client.UI.Controls;
-using Simitone.Client.Utils;
-using FSO.Common;
-using System.IO;
-using FSO.Files.RC;
 
 namespace Simitone.Client.UI.Panels
 {
@@ -80,6 +81,24 @@ namespace Simitone.Client.UI.Panels
             },
         };
 
+        /// <summary>
+        /// The last house the user clicked on, bringing up the house selection menu
+        /// <para/><see langword="null"/> if there is no currently selected house
+        /// </summary>
+        private int? _selectedHouse;
+        private enum NeighCameraModes
+        {
+            /// <summary>
+            /// Zoomed out to see neighborhood
+            /// </summary>
+            FullScr,
+            /// <summary>
+            /// Camera is focused on a house the user selected
+            /// </summary>
+            HouseFocus
+        }
+        private NeighCameraModes _selectedCameraMode;
+
         public TS1Provider Provider;
         public event Action<int> OnHouseSelect;
         public HITSound BgSound;
@@ -138,12 +157,21 @@ namespace Simitone.Client.UI.Panels
             ScaleX = ScaleY = scale * Zoom;
 
             X = (GlobalSettings.Default.GraphicsWidth) / 2 - _cp.X * ScaleX;
-            Y = (GlobalSettings.Default.GraphicsHeight) / 2 - _cp.Y * ScaleY;
+            Y = (GlobalSettings.Default.GraphicsHeight) / 2 - _cp.Y * ScaleY;            
         }
 
         public override void GameResized()
         {
             UpdatePosition();
+
+            //** when user resizes the window boundaries, the camera and HouseSelectPanel needs to be reset to account for the new space
+            if (_selectedCameraMode == NeighCameraModes.HouseFocus) // house focus requires repositioning the camera
+            {
+                if (!_selectedHouse.HasValue) // somehow a house got unselected -- reset to zoom out
+                    ResetZoom();
+                else // house is selected, recenter on the house and remake the houseselectpanel to account for the new scr width & height
+                    SetCameraMode();
+            }
         }
 
         private Texture2D texture;
@@ -212,10 +240,11 @@ namespace Simitone.Client.UI.Panels
 
         public void ResetZoom()
         {
+            _selectedHouse = null;
             if (LastHS == null) return;
             LastHS.Kill();
             LastHS = null;
-            GameFacade.Screens.Tween.To(this, 0.5f, new Dictionary<string, float>() { { "Zoom", 1f }, { "CenterPositionX", 400 }, { "CenterPositionY", 300 } }, TweenQuad.EaseOut);
+            SetCameraMode(NeighCameraModes.FullScr);
         }
 
         public UIHouseSelectPanel LastHS;
@@ -223,24 +252,70 @@ namespace Simitone.Client.UI.Panels
         public void SelectHouse(int house)
         {
             if (LastHS != null && LastHS.HouseID == house)
-            {
-                ResetZoom();
+            { // reset zoom will clear the LastHS UIControl and also the _selectedHouse field
+                ResetZoom();                
             }
             else
+            { // create a LastHS UIControl and set the _selectedHouse field                
+                _selectedHouse = house; // set the currently selected house
+                SetCameraMode(NeighCameraModes.HouseFocus);                              
+            }
+        }
+
+        /// <summary>
+        /// Opens a new <see cref="UIHouseSelectPanel"/> for the given <paramref name="house"/>
+        /// </summary>
+        /// <param name="house"></param>
+        private void OpenHouseSelectPanel(int house)
+        {
+            //if panel is already open, destroy it
+            LastHS?.Kill();
+            LastHS = new UIHouseSelectPanel(house);
+
+            LastHS.OnSelected += (h) =>
             {
-                LastHS?.Kill();
-                LastHS = new UIHouseSelectPanel(house);
-                GameFacade.Screens.CurrentUIScreen.Add(LastHS);
-                GameFacade.Screens.Tween.To(this, 0.5f, new Dictionary<string, float>() {
+                OnHouseSelect?.Invoke(h);
+                //HITVM.Get().PlaySoundEvent("bkground_fade");
+            };
+            GameFacade.Screens.CurrentUIScreen.Add(LastHS);
+        }
+
+        /// <summary>
+        /// Sets the camera settings for the selected <paramref name="NewMode"/> and updates the <see cref="_selectedCameraMode"/> property
+        /// </summary>
+        /// <param name="NewMode"></param>
+        private void SetCameraMode(NeighCameraModes? NewMode = default)
+        {
+            NeighCameraModes oldMode = _selectedCameraMode;
+            if (NewMode.HasValue)
+                _selectedCameraMode = NewMode.Value;            
+
+            switch (_selectedCameraMode)
+            {
+                case NeighCameraModes.HouseFocus:
+
+                    //handle if no selection is made when camera transitioning
+                    if (_selectedHouse == null || _selectedHouse < 0)
+                    {
+                        ResetZoom();
+                        return;
+                    }
+
+                    int house = _selectedHouse.Value;
+
+                    //**spawn (or respawn) the HouseSelectPanel
+                    OpenHouseSelectPanel(house);
+
+                    GameFacade.Screens.Tween.To(this, 0.5f, new Dictionary<string, float>() {
                     { "Zoom", (Mode==4)?3f:1.5f },
                     { "CenterPositionX", HousePositions[house].X - ((Mode==4)?90f:180f) },
                     { "CenterPositionY", HousePositions[house].Y } }, TweenQuad.EaseOut);
+                    break;
 
-                LastHS.OnSelected += (h) =>
-                {
-                    OnHouseSelect?.Invoke(h);
-                    //HITVM.Get().PlaySoundEvent("bkground_fade");
-                };
+                case NeighCameraModes.FullScr:
+                default:
+                    GameFacade.Screens.Tween.To(this, 0.5f, new Dictionary<string, float>() { { "Zoom", 1f }, { "CenterPositionX", 400 }, { "CenterPositionY", 300 } }, TweenQuad.EaseOut);
+                    break;
             }
         }
 
