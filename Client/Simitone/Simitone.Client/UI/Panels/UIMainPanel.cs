@@ -363,6 +363,8 @@ namespace Simitone.Client.UI.Panels
 
         }
 
+        private int _currentSimSpeed = -1;
+
         public override void Update(UpdateState state)
         {
             base.Update(state);
@@ -383,11 +385,11 @@ namespace Simitone.Client.UI.Panels
             Game.LotControl.PickupPanel.Visible = Game.LotControl.PickupPanel.Opacity > 0;
 
             if (Mode != UIMainPanelMode.LIVE)
-            {
-                Game.vm.SpeedMultiplier = -1;
+            { // when in BUILD or BUY, gameplay cannot proceed. Set multiplier to -1 to ensure this cannot be bypassed by changing speed using speed buttons.               
+                Game.LockSimSpeed(); // make it so play cannot continue
             } else if (Game.vm.SpeedMultiplier == -1)
-            {
-                Game.vm.SpeedMultiplier = 0;
+            { // pop prior speed
+                Game.UnlockSimSpeed();
             }
         }
 

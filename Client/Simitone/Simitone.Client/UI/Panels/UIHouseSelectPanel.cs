@@ -306,7 +306,7 @@ namespace Simitone.Client.UI.Panels
 
             Point MoreButtonSize = new(208,0);
             Point buttonMargin = new(10, 0);
-            int dockpanelSpace = controlBoundaries.X - ((margin.X * 2) + MoreButtonSize.X + (buttonMargin.X * 2));
+            int dockpanelSpace = controlBoundaries.X - ((margin.X * 2) + (moveIn == null ? MoreButtonSize.X : 0) + (buttonMargin.X * 2));
 
             EnterLot = new UIBigButton(false)
             {

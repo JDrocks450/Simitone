@@ -27,6 +27,12 @@ namespace Simitone.Client.UI.Panels
 
         public void SetMode(ushort mode, bool moveIn)
         {
+            //wipes to a new mode with a transition
+            void WithPresetTransition(string icon, Action action)
+            {
+                var transition = new UITransDialog(icon, action);
+            }            
+
             MoveInMode = moveIn;
             foreach (var btn in LeftBtns) Remove(btn);
             foreach (var btn in RightBtns) Remove(btn);
@@ -34,26 +40,33 @@ namespace Simitone.Client.UI.Panels
 
             AddBtn(LeftBtns, "ngbh_cas.png", (btn) =>
             {
-                var transition = new UITransDialog("cas", () =>
-                {
-                    GameController.EnterCAS();
-                });
+                WithPresetTransition("cas", () =>
+                 {
+                     GameController.EnterCAS();
+                 });
             });
-            if (mode != 4) AddBtn(LeftBtns, "ngbh_back.png", (btn) => PopMode(4));
+            if (mode != 4) AddBtn(LeftBtns, "ngbh_back.png", (btn) => PopMode("trans_normal.png",4));
 
-            if (mode != 2 && !moveIn) AddBtn(RightBtns, "ngbh_downt.png", (btn) => PopMode(2));
-            if (mode != 3 && !moveIn) AddBtn(RightBtns, "ngbh_vacat.png", (btn) => PopMode(3));
-            if (mode != 5 && !moveIn) AddBtn(RightBtns, "ngbh_studio.png", (btn) => PopMode(5));
-            if (mode != 7) AddBtn(RightBtns, "ngbh_magic.png", (btn) => PopMode(7));
+            if (mode != 2 && !moveIn) AddBtn(RightBtns, "ngbh_downt.png", (btn) => PopMode("ngbh_downt.png",2));
+            if (mode != 3 && !moveIn) AddBtn(RightBtns, "ngbh_vacat.png", (btn) => PopMode("ngbh_vacat.png",3));
+            if (mode != 5 && !moveIn) AddBtn(RightBtns, "ngbh_studio.png", (btn) => PopMode("ngbh_studio.png",5));
+            if (mode != 7) AddBtn(RightBtns, "ngbh_magic.png", (btn) => PopMode("ngbh_magic.png", 7));
             Mode = mode;
 
             LayBtns();
         }
 
-        public void PopMode(ushort mode)
+        public void PopMode(string neighborhoodIcon, ushort mode)
         {
-            Panel.PopulateScreen(mode);
-            SetMode(mode, MoveInMode);
+            void WithTransition(string icon, Action action)
+            {
+                var transition = UITransDialog.CreateWithCustomUIIcon(icon, action);
+            }
+            WithTransition(neighborhoodIcon, () =>
+            {
+                Panel.PopulateScreen(mode);
+                SetMode(mode, MoveInMode);
+            });
         }
 
         private void LayBtns()

@@ -232,10 +232,15 @@ namespace Simitone.Client.UI.Panels
                 BgSound.AddOwner(-25);
             }
             Mode = mode;
-            Zoom = Zoom;
+
             CenterPositionX = CenterPositionX;
             CenterPositionY = CenterPositionY;
             //SimitoneNeighOBJExporter.SaveOBJ(Path.Combine(FSOEnvironment.UserDir, "NeighModel" + mode + "/"), locations);
+
+            //when transitioning, this is too much motion if this tweens with the transition -- make sure it immediately is gone
+            if (LastHS != null)
+                LastHS.Visible = false; 
+            ResetZoom();
         }
 
         public void ResetZoom()

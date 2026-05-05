@@ -216,7 +216,7 @@ namespace Simitone.Client.UI.Screens
                             confirmDialog.Close();
                             MoveInAndPlay((short)house, MoveInFamily.Value, switcher);
                         },
-                        (b) => confirmDialog.Close())
+                        (b) => { confirmDialog.Close(); TS1NeighPanel.ResetZoom(); })
                     });
                     UIScreen.GlobalShowDialog(confirmDialog, true);
                 }
@@ -227,6 +227,7 @@ namespace Simitone.Client.UI.Screens
             };
             Add(TS1NeighPanel);
             Add(switcher);
+            Bg.Visible = true;
         }
 
         public void PlayHouse(short house, UIElement switcher)
@@ -277,9 +278,7 @@ namespace Simitone.Client.UI.Screens
             //2 speed is 3x
             //3 speed is 10x
 
-            if (vm == null) return;
-            if (vm.SpeedMultiplier == -1) return;
-
+            if (vm.SpeedMultiplier == GameplaySpeed.Disabled) return;
             switch (vm.SpeedMultiplier)
             {
                 case 0:
@@ -296,7 +295,7 @@ namespace Simitone.Client.UI.Screens
                 case 1:
                     switch (speed)
                     {
-                        case 0:
+                        case 4:
                             HITVM.Get().PlaySoundEvent(UISounds.Speed1ToP); break;
                         case 2:
                             HITVM.Get().PlaySoundEvent(UISounds.Speed1To2); break;
@@ -307,7 +306,7 @@ namespace Simitone.Client.UI.Screens
                 case 3:
                     switch (speed)
                     {
-                        case 0:
+                        case 4:
                             HITVM.Get().PlaySoundEvent(UISounds.Speed2ToP); break;
                         case 1:
                             HITVM.Get().PlaySoundEvent(UISounds.Speed2To1); break;
@@ -318,7 +317,7 @@ namespace Simitone.Client.UI.Screens
                 case 10:
                     switch (speed)
                     {
-                        case 0:
+                        case 4:
                             HITVM.Get().PlaySoundEvent(UISounds.Speed3ToP); break;
                         case 1:
                             HITVM.Get().PlaySoundEvent(UISounds.Speed3To1); break;
@@ -330,10 +329,10 @@ namespace Simitone.Client.UI.Screens
 
             switch (speed)
             {
-                case 0: vm.SpeedMultiplier = 0; break;
-                case 1: vm.SpeedMultiplier = 1; break;
-                case 2: vm.SpeedMultiplier = 3; break;
-                case 3: vm.SpeedMultiplier = 10; break;
+                case 4: vm.SpeedMultiplier = GameplaySpeed.ReverseRemap[GameplaySpeed.Pause]; break;
+                case 1: vm.SpeedMultiplier = GameplaySpeed.ReverseRemap[GameplaySpeed.Play]; break;
+                case 2: vm.SpeedMultiplier = GameplaySpeed.ReverseRemap[GameplaySpeed.FastForward]; break;
+                case 3: vm.SpeedMultiplier = GameplaySpeed.ReverseRemap[GameplaySpeed.FastFastForward]; break;
             }
             vm.ResetTickAlign();
         }
@@ -567,14 +566,25 @@ namespace Simitone.Client.UI.Screens
             
             if (!external)
             {
+                bool isSimless = true;
                 if (!Downtown && ActiveFamily != null)
                 {
                     ActiveFamily.SelectWholeFamily();
                     vm.TS1State.ActivateFamily(vm, ActiveFamily);
+                    isSimless = false;
                 }
                 BlueprintReset(lotName, null);
                 
                 if (vm.LoadErrors.Count > 0) GameThread.NextUpdate((state) => ShowLoadErrors(vm.LoadErrors, true));
+                if (isSimless && World.State.CameraMode < CameraRenderMode._3D) // 2D mode only
+                {
+                    Blueprint arch = World?.Architecture?.Blueprint;
+                    if (arch != null) { // center on the center of the lot by default
+                        Vector3 anchor = new Vector3(arch.Width / 2, arch.Height / 2,0);
+                        World.State.CenterTile = World.State.Project2DCenterTile(anchor);
+                        World.State.Camera2D.RotationAnchor = anchor;
+                    }
+                }
 
                 vm.MyUID = 65537;
                 var settings = GlobalSettings.Default;
@@ -713,12 +723,8 @@ namespace Simitone.Client.UI.Screens
             var isSimless = (ActiveFamily == null && !isSurrounding);
             vm.SpeedMultiplier = -1;
             vm.Tick();
-            vm.SpeedMultiplier = 1;
+            vm.SpeedMultiplier = !isSimless ? 1 : -1;
 
-            if (isSimless)
-            {
-                vm.SpeedMultiplier = -1;
-            }
             vm.SetGlobalValue(32, (short)(isSimless ? 1 : 0));
         }
 
@@ -883,6 +889,29 @@ namespace Simitone.Client.UI.Screens
             NeighSelection(NeighSelectionMode.Normal);
             Downtown = false;
             SavedLot = null;
+        }
+
+        int _underlyingSimSpeed = -1;
+
+        /// <summary>
+        /// If leaving a mode that is forcing paused gameplay speed, resets the gameplay speed to the one set before <see cref="LockSimSpeed"/>
+        /// </summary>
+        internal void UnlockSimSpeed()
+        {
+            if (vm.SpeedMultiplier != -1) return; // unlocked already
+            vm.SpeedMultiplier = _underlyingSimSpeed;
+            if (vm.SpeedMultiplier < 0) // oops?
+                vm.SpeedMultiplier = GameplaySpeed.ReverseRemap[GameplaySpeed.Play]; // force speed 1
+            vm.ResetTickAlign();
+        }
+        /// <summary>
+        /// If the gameplay is not already locked (<see cref="GameplaySpeed.Disabled"/>), saves the current gameplay speed and disables changing gameplay speed.
+        /// </summary>
+        internal void LockSimSpeed()
+        {
+            if (vm.SpeedMultiplier == -1) return; // locked already
+            _underlyingSimSpeed = vm.SpeedMultiplier;
+            vm.SpeedMultiplier = GameplaySpeed.Disabled;
         }
     }
 
