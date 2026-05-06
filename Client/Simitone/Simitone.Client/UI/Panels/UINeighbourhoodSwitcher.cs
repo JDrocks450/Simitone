@@ -28,10 +28,7 @@ namespace Simitone.Client.UI.Panels
         public void SetMode(ushort mode, bool moveIn)
         {
             //wipes to a new mode with a transition
-            void WithPresetTransition(string icon, Action action)
-            {
-                var transition = new UITransDialog(icon, action);
-            }            
+            UITransDialog WithPresetTransition(string icon, Action action) => new UITransDialog(icon, action);
 
             MoveInMode = moveIn;
             foreach (var btn in LeftBtns) Remove(btn);
@@ -58,10 +55,7 @@ namespace Simitone.Client.UI.Panels
 
         public void PopMode(string neighborhoodIcon, ushort mode)
         {
-            void WithTransition(string icon, Action action)
-            {
-                var transition = UITransDialog.CreateWithCustomUIIcon(icon, action);
-            }
+            UITransDialog WithTransition(string icon, Action action) => UITransDialog.CreateWithCustomUIIcon(icon, action);
             WithTransition(neighborhoodIcon, () =>
             {
                 Panel.PopulateScreen(mode);
@@ -74,7 +68,7 @@ namespace Simitone.Client.UI.Panels
             int i = 0;
             foreach (var btn in LeftBtns)
             {
-                btn.Position = new Microsoft.Xna.Framework.Vector2(17+48, 14+110*i + 48);
+                btn.Position = new Microsoft.Xna.Framework.Vector2(17+48, 14+110*i + 48);                
                 i++;
             }
 
@@ -95,10 +89,15 @@ namespace Simitone.Client.UI.Panels
         private UIElasticButton AddBtn(List<UIElasticButton> targ, string imgname, ButtonClickDelegate onClick)
         {
             var ui = Content.Get().CustomUI;
-            var btn = new UIElasticButton(ui.Get(imgname).Get(GameFacade.GraphicsDevice));
+            var btn = new UIElasticButton(ui.Get(imgname).Get(GameFacade.GraphicsDevice))
+            {
+                ElementShadow = new UIShadow(ui.Get("ngbh_shadow.png").Get(GameFacade.GraphicsDevice)) {
+                    ShadowDepth = 5
+                }
+            };
             btn.OnButtonClick += onClick;
             targ.Add(btn);
-            Add(btn);
+            Add(btn);            
             return btn;
         }
     }

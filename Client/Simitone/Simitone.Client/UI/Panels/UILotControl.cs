@@ -257,10 +257,11 @@ namespace Simitone.Client.UI.Panels
                     UIScreen.GlobalShowDialog(phone, true);
                     phone.OnResult += (result) =>
                     {
+                        result = (result > 0) ? 1 : 0; // true = 1, false = 2. false will then move to anim hang up in script
                         vm.SendCommand(new VMNetDialogResponseCmd
                         {
                             ActorUID = info.Caller.PersistID,
-                            ResponseCode = (byte)((result > 0) ? 1 : 0),
+                            ResponseCode = (byte)result,
                             ResponseText = result.ToString()
                         });
                         BlockingDialog = null;

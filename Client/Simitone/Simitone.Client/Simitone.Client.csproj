@@ -9,6 +9,10 @@
     <AssemblyName>Simitone.Client</AssemblyName>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Content\uigraphics\ngbh\ngbh_shadow.png" />
+  </ItemGroup>
   
   <ItemGroup>
     <Content Include="Content\3D\TEX_0.png">
@@ -621,6 +625,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\uigraphics\ngbh\ngbh_opt.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Content\uigraphics\ngbh\ngbh_shadow.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Content\uigraphics\ngbh\ngbh_studio.png">
