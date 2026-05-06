@@ -80,7 +80,7 @@ namespace Simitone.Client.UI.Panels
             }
         }
 
-        public UIHouseSelectPanel(int houseID)
+        public UIHouseSelectPanel(int houseID, UINeighborhoodSelectionPanel.UINeighborhoodSelectionOptions Options)
         {
             var screen = GameFacade.Screens.CurrentUIScreen;
             var extra = Math.Max(0, (screen.ScreenHeight - 640) / 128) * 64;
@@ -304,13 +304,15 @@ namespace Simitone.Client.UI.Panels
                 }
             }
 
+            bool showMoreOptionsButton = Options.MoreButtonEnabled && moveIn == null;
+
             Point MoreButtonSize = new(208,0);
             Point buttonMargin = new(10, 0);
-            int dockpanelSpace = controlBoundaries.X - ((margin.X * 2) + (moveIn == null ? MoreButtonSize.X : 0) + (buttonMargin.X * 2));
+            int dockpanelSpace = controlBoundaries.X - ((margin.X * 2) + (showMoreOptionsButton ? MoreButtonSize.X : 0) + (buttonMargin.X * 2));
 
             EnterLot = new UIBigButton(false)
             {
-                Caption = (moveIn == null) ? "Enter Lot" : "Move In",
+                Caption = (moveIn == null) ? Options.PrimaryButtonText : "Move In",
                 Width = dockpanelSpace,// (moveIn == null)? (screen.ScreenWidth / 2 - 293) : (screen.ScreenWidth/2-60);
                 Disabled = !buttonValid,
                 Position = new Vector2(30, screen.ScreenHeight - (extra + 125)),                
@@ -323,7 +325,7 @@ namespace Simitone.Client.UI.Panels
             More.Width = MoreButtonSize.X;
             More.Position = new Vector2(screen.ScreenWidth / 2 - 238, screen.ScreenHeight - (extra + 125));
             More.OnButtonClick += (btn) => { ShowMore(true); };
-            if (moveIn == null) Add(More);
+            if (showMoreOptionsButton) Add(More);
 
             var optionFunctions = new ButtonClickDelegate[]
             {

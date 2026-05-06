@@ -1,32 +1,31 @@
 ﻿using FSO.Client;
 using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
-using FSO.Common;
 using FSO.Common.Rendering.Framework.IO;
 using FSO.Common.Rendering.Framework.Model;
-using FSO.Common.Utils;
 using FSO.Content;
 using FSO.Content.Framework;
 using FSO.Content.Model;
 using FSO.Files.Formats.IFF.Chunks;
-using FSO.Files.RC;
 using FSO.HIT;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
-using Simitone.Client.UI.Controls;
-using Simitone.Client.Utils;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Simitone.Client.UI.Panels
-{
+{    
     public class UINeighborhoodSelectionPanel : UIContainer
     {
+        public class UINeighborhoodSelectionOptions
+        {
+            public static UINeighborhoodSelectionOptions Default = new UINeighborhoodSelectionOptions();
+
+            public List<short> LotZoneExclusionFilter { get; } = new();
+            public string PrimaryButtonText { get; set; } = "Enter House";
+            public bool MoreButtonEnabled { get; set; } = true;
+        }
 
         public static NeighborhoodViewConfig[] Neighborhoods = new NeighborhoodViewConfig[]
         {
@@ -143,11 +142,15 @@ namespace Simitone.Client.UI.Panels
             }
         }
 
-        public UINeighborhoodSelectionPanel(ushort mode)
+        public UINeighborhoodSelectionPanel(ushort mode, UINeighborhoodSelectionOptions? Options = default)
         {
+            if (Options == null)
+                Options = UINeighborhoodSelectionOptions.Default;
+            options = Options;
+
             Provider = Content.Get().TS1Global;
             PopulateScreen(mode);
-            GameResized();
+            GameResized();            
         }
 
         public void UpdatePosition()
@@ -209,9 +212,17 @@ namespace Simitone.Client.UI.Panels
                 var num = int.Parse(loc[0].TrimStart());
                 if (num == 99) continue;
                 var button = new UINeighborhoodHouseButton(num, SelectHouse, config.Scale);
-                button.Position = new Vector2(int.Parse(loc[1].TrimStart()), int.Parse(loc[2].TrimStart()));
+                button.Position = new Vector2(int.Parse(loc[1].TrimStart()), int.Parse(loc[2].TrimStart()));                
                 HousePositions[num] = button.Position;
                 buttons.Add(button);
+
+                //**check lot zoning
+                if (Content.Get().Neighborhood.ZoningDictionary.TryGetValue((short)num, out var result))
+                {
+                    //this is excluded in our options -- disable the button
+                    if (options.LotZoneExclusionFilter.Contains(result)) 
+                        button.Enabled = false;
+                }
             }
 
             var ordered = buttons.OrderBy(x => x.Y);
@@ -253,6 +264,7 @@ namespace Simitone.Client.UI.Panels
         }
 
         public UIHouseSelectPanel LastHS;
+        private readonly UINeighborhoodSelectionOptions options;
 
         public void SelectHouse(int house)
         {
@@ -275,7 +287,7 @@ namespace Simitone.Client.UI.Panels
         {
             //if panel is already open, destroy it
             LastHS?.Kill();
-            LastHS = new UIHouseSelectPanel(house);
+            LastHS = new UIHouseSelectPanel(house, options);
 
             LastHS.OnSelected += (h) =>
             {
@@ -420,6 +432,8 @@ namespace Simitone.Client.UI.Panels
         private THMB Offsets;
         public float AlphaTime { get; set; }
 
+        public bool Enabled { get; set; } = true;
+
         public UINeighborhoodHouseButton(int houseNumber, Action<int> selectionCallback, float scale)
         {
             if (houseNumber == 71) { }
@@ -443,12 +457,14 @@ namespace Simitone.Client.UI.Panels
             var clickHandler =
                 ListenForMouse(new Rectangle(w / -2, w / -4, w, h/2), (evt, state) =>
                 {
+                    if (!Enabled) return;
                     switch (evt)
                     {
                         case UIMouseEventType.MouseUp:
                             HITVM.Get().PlaySoundEvent(FSO.Client.UI.Model.UISounds.NeighborhoodClick);
                             selectionCallback(houseNumber); break;
                         case UIMouseEventType.MouseOver:
+                            
                             GameFacade.Screens.Tween.To(this, 0.5f, new Dictionary<string, float>() { { "AlphaTime", 1f } });
                             HITVM.Get().PlaySoundEvent(FSO.Client.UI.Model.UISounds.NeighborhoodRollover);
                             Hovered = true; break;

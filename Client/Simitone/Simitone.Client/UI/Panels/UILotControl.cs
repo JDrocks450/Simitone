@@ -36,6 +36,7 @@ using Simitone.Client.UI.Panels.LotControls;
 using FSO.Client.UI.Panels.LotControls;
 using FSO.UI.Panels.LotControls;
 using Simitone.Client.UI.Controls;
+using Simitone.Client.UI.Panels.Desktop;
 
 namespace Simitone.Client.UI.Panels
 {
@@ -96,7 +97,7 @@ namespace Simitone.Client.UI.Panels
         // and that the code actually blocks further dialogs from appearing while waiting for a response.
         // If we are to implement controlling multiple sims, this must be changed.
         private UIMobileDialog BlockingDialog;
-        private UINeighborhoodSelectionPanel TS1NeighSelector;
+        private UITS1NeighborhoodVisitLotPanel TS1NeighSelector;
         private ulong LastDialogID;
 
         private static uint GOTO_GUID = 0x000007C4;
@@ -245,10 +246,12 @@ namespace Simitone.Client.UI.Panels
                 case VMDialogType.TS1Neighborhood:
                 case VMDialogType.TS1StudioTown:
                 case VMDialogType.TS1Magictown:
-                    TS1NeighSelector = new UINeighborhoodSelectionPanel((ushort)VMDialogPrivateStrings.TypeToNeighID[type]);
+                    TS1NeighSelector = new UITS1NeighborhoodVisitLotPanel((ushort)VMDialogPrivateStrings.TypeToNeighID[type]);
                     Parent.Add(TS1NeighSelector);
                     ((TS1GameScreen)Parent).Bg.Visible = true;
                     ((TS1GameScreen)Parent).LotControl.Visible = false;
+                    ((TS1GameScreen)Parent).Frontend.Visible = false;
+                    TS1NeighSelector.Awake();
                     TS1NeighSelector.OnHouseSelect += HouseSelected;
                     return;
                 case VMDialogType.TS1PhoneBook:
