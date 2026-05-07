@@ -652,10 +652,11 @@ namespace Simitone.Client.UI.Screens
                 server.ConnectClient(myClient);
 
                 //select any avatar -- for multiplayer, we should select avatar by client join order
-                if (ActiveFamily != null && ActiveFamily.RuntimeSubset.Any())
+                if (!Downtown && ActiveFamily != null && ActiveFamily.RuntimeSubset.Any())
                 { // for now, select the first sim in the runtime subset -- todo: sims 1 stores last selected sim to file?
                     var avatar = vm.Context.ObjectQueries.Avatars.FirstOrDefault(x => x.Object.OBJ.GUID == ActiveFamily.RuntimeSubset[0]);
-                    vm.SendCommand(new VMNetChangeControlCmd() { TargetID = avatar.ObjectID });
+                    if (avatar != null) 
+                        vm.SendCommand(new VMNetChangeControlCmd() { TargetID = avatar.ObjectID });
                 }
 
                 LoadSurrounding(short.Parse(lotName.Substring(lotName.Length - 6, 2)));
