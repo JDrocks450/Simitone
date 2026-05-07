@@ -19,6 +19,8 @@ namespace Simitone.Client.UI.Panels.Desktop
     /// </summary>
     internal class UITS1NeighborhoodVisitLotPanel : UIContainer
     {
+        private const string Title_StringTable = "212"; // 212 Go Downtown Dialog Strings
+
         private readonly ushort neighborhoodMode;
         private UIDiagonalStripe captionBg;
         private UILabel caption;
@@ -52,12 +54,18 @@ namespace Simitone.Client.UI.Panels.Desktop
             Add(captionBg);
             caption = new UILabel()
             {
-                Caption = "TS1CAPTION -- Visit Lot", // todo: use UIText entry for this so it is localised // bisquick
+                Caption = getTitle(), 
                 Position = new Vector2(20, 20),
             };
             caption.CaptionStyle.Size = 18;
             caption.CaptionStyle.Color = Color.White;
             Add(caption);
+        }
+
+        string getTitle()
+        {
+            int id = Random.Shared.Next(0, 3); // three strings in this table .. assume any new ones may be for another dialog added later
+            return GameFacade.Strings.GetString(Title_StringTable, id.ToString()) ?? "***MISSING***"; // should not be null, but just in case ;)
         }
 
         public void Awake()
@@ -79,9 +87,9 @@ namespace Simitone.Client.UI.Panels.Desktop
 
             var gameScr = GameFacade.Screens.CurrentUIScreen;
             captionBg.BodySize = new Point(gameScr.ScreenWidth, captionBg.BodySize.Y);
+            caption.Caption = getTitle(); // todo: use UIText entry for this so it is localised // bisquick
             var desiredSize = caption.CaptionStyle.MeasureString(caption.Caption);
-            caption.Position = new Vector2((gameScr.ScreenWidth / 2) - (desiredSize.X / 2), 20);
-            caption.Caption = "Where would you like to go?"; // todo: use UIText entry for this so it is localised // bisquick
+            caption.Position = new Vector2((gameScr.ScreenWidth / 2) - (desiredSize.X / 2), 20);            
         }
     }
 }

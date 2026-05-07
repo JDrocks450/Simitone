@@ -566,17 +566,16 @@ namespace Simitone.Client.UI.Screens
             
             if (!external)
             {
-                bool isSimless = true;
                 if (!Downtown && ActiveFamily != null)
                 {
                     ActiveFamily.SelectWholeFamily();
                     vm.TS1State.ActivateFamily(vm, ActiveFamily);
-                    isSimless = false;
                 }
                 BlueprintReset(lotName, null);
                 
                 if (vm.LoadErrors.Count > 0) GameThread.NextUpdate((state) => ShowLoadErrors(vm.LoadErrors, true));
-                if (isSimless && World.State.CameraMode < CameraRenderMode._3D) // 2D mode only
+                // center to the middle of the lot because 0,0 is very jarring
+                if (World.State.CameraMode < CameraRenderMode._3D) // 2D mode only
                 {
                     Blueprint arch = World?.Architecture?.Blueprint;
                     if (arch != null) { // center on the center of the lot by default
