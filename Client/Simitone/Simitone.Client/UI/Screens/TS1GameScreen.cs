@@ -26,6 +26,7 @@ using FSO.SimAntics.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using Ninject.Selection;
 using Simitone.Client.UI.Controls;
 using Simitone.Client.UI.Panels;
 using Simitone.Client.UI.Panels.WorldUI;
@@ -240,6 +241,10 @@ namespace Simitone.Client.UI.Screens
 
         public void MoveInAndPlay(short house, int family, UIElement switcher)
         {
+            // ** ensure previous lot iff is cleaned up
+            CleanUpPeopleInternal(house);
+            // ** 
+
             MoveInFamily = null;
             var neigh = Content.Get().Neighborhood;
             var fami = neigh.GetFamily((ushort)family);
@@ -247,11 +252,30 @@ namespace Simitone.Client.UI.Screens
             PlayHouse(house, switcher);
         }
 
+        /// <summary>
+        /// Opens up a lot and cleans up any remaining people on the lot, saves it and closes it again.
+        /// </summary>
+        /// <param name="houseID"></param>
+        private void CleanUpPeopleInternal(short houseID)
+        {
+            //TODO: using this function is compliant with how to load a lot, but a little wasteful for what we're accomplishing
+            InitializeLot(Content.Get().Neighborhood.GetHousePath(houseID), false);
+            vm.TS1State.CleanUpAllPeople(vm);            
+            Save();
+            CleanupLastWorld(); // delete the loaded lot
+        }
+
         public void EvictLot(FAMI family, short houseID)
         {
+            //load the vm for the lot, delete everything, save it.
+
             family.Budget += family.ValueInArch;
             family.ValueInArch = 0;
             Content.Get().Neighborhood.MoveOut(houseID);
+            CleanUpPeopleInternal(houseID);
+            //TODO: delete owned objects, likely run a sum total of the resale value of the objects, add that value to FAMI budget
+
+            //please be aware that as of this point the neighborhood changes are now saved.
             TS1NeighPanel.SelectHouse(houseID);
         }
 
@@ -626,6 +650,14 @@ namespace Simitone.Client.UI.Screens
 
                 var server = (VMServerDriver)Driver;
                 server.ConnectClient(myClient);
+
+                //select any avatar -- for multiplayer, we should select avatar by client join order
+                if (ActiveFamily != null && ActiveFamily.RuntimeSubset.Any())
+                { // for now, select the first sim in the runtime subset -- todo: sims 1 stores last selected sim to file?
+                    var avatar = vm.Context.ObjectQueries.Avatars.FirstOrDefault(x => x.Object.OBJ.GUID == ActiveFamily.RuntimeSubset[0]);
+                    vm.SendCommand(new VMNetChangeControlCmd() { TargetID = avatar.ObjectID });
+                }
+
                 LoadSurrounding(short.Parse(lotName.Substring(lotName.Length - 6, 2)));
 
                 GameFacade.Cursor.SetCursor(CursorType.Normal);

@@ -1,4 +1,6 @@
 ﻿using FSO.Client.UI.Controls;
+using FSO.SimAntics;
+using FSO.SimAntics.Model.TS1Platform;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -8,6 +10,20 @@ using System.Threading.Tasks;
 
 namespace Simitone.Client.UI
 {
+    internal static class SimitoneSimAnticsVMExtensions
+    {
+        /// <summary>
+        /// Removes all the Avatars on the lot
+        /// </summary>
+        /// <param name="vm"></param>
+        public static void CleanUpAllPeople(this VMTS1LotState State, VM vm)
+        {
+            List<VMEntity> avatars = vm.Context.ObjectQueries.Avatars;
+
+            while (avatars.Any())
+                vm.RemoveEntity(avatars[0]);
+        }
+    }
     internal static class SimitoneUIExtensions
     {
         /// <summary>
