@@ -29,6 +29,8 @@ namespace Simitone.Client.UI.Model
         public Color Text = Color.White;
         public Color SecondaryText = new Color(0, 255, 128, 255);
 
+        public Color TextBoxSelectionFrameColor = Color.White;
+
         public Color DialogBg = Color.Black * 0.8f;
         public Color DialogText = Color.White;
         public Color DialogTitle = Color.Black;
