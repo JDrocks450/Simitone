@@ -179,9 +179,10 @@ namespace Simitone.Client.UI.Panels
             }
         }
 
-        public void SetMode(UIMainPanelMode mode)
+        public void SetMode(UIMainPanelMode mode, bool force = false)
         {
-            if (mode == Mode) return;
+            if (!force)
+                if (mode == Mode) return;
             Mode = mode;
 
             Game.LotControl.World.State.BuildMode = 0;
@@ -240,6 +241,7 @@ namespace Simitone.Client.UI.Panels
                     panel = new UIButtonSubpanel(Game, new UICatFunc[] {
                         new UICatFunc(GameFacade.Strings.GetString("145", "3"), "opt_save.png", () => { Game.Save(); }),
                         new UICatFunc(GameFacade.Strings.GetString("145", "1"), "opt_neigh.png", () => { Game.ReturnToNeighbourhood(); }),
+                        new UICatFunc("Settings", "opt_setting.png", () => { Game.ShowOptionsDialog(); }),
                         new UICatFunc(GameFacade.Strings.GetString("145", "5"), "opt_quit.png", () => { Game.CloseAttempt(); }),
                     });
                     break;
@@ -364,12 +366,15 @@ namespace Simitone.Client.UI.Panels
         }
 
         private int _currentSimSpeed = -1;
+        private byte? _currentLangCode = null;
 
         public override void Update(UpdateState state)
         {
             base.Update(state);
             Visible = _CurWidth > 0;
 
+            if (!_currentLangCode.HasValue)
+                _currentLangCode = (byte)(GameFacade.Game as SimitoneGame).CurrentLanguage;
             if (!Game.Desktop)
             {
                 if (Game.Level != LastFloor)
@@ -381,7 +386,16 @@ namespace Simitone.Client.UI.Panels
                     FloorUpBtn.Disabled = LastFloor == 5;
                 }
             }
-
+            else
+            { // desktop
+                //language update                
+                if (_currentLangCode != (byte)(GameFacade.Game as SimitoneGame).CurrentLanguage)
+                { // language changed
+                    SetMode(Mode, true); // reload the panel
+                    _currentLangCode = (byte)(GameFacade.Game as SimitoneGame).CurrentLanguage;
+                }
+            }
+            
             Game.LotControl.PickupPanel.Visible = Game.LotControl.PickupPanel.Opacity > 0;
 
             if (Mode != UIMainPanelMode.LIVE)

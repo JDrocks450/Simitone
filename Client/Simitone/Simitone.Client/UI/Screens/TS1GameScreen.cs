@@ -29,6 +29,7 @@ using Microsoft.Xna.Framework.Input;
 using Ninject.Selection;
 using Simitone.Client.UI.Controls;
 using Simitone.Client.UI.Panels;
+using Simitone.Client.UI.Panels.Options;
 using Simitone.Client.UI.Panels.WorldUI;
 using Simitone.Client.Utils;
 using System;
@@ -57,6 +58,9 @@ namespace Simitone.Client.UI.Screens
         //for TS1 hybrid mode
         public UINeighborhoodSelectionPanel TS1NeighPanel;
         public FAMI ActiveFamily;
+
+        //for Options Dialog
+        UIOptionsAlert _openOptionsDialog;
 
         public bool InLot
         {
@@ -187,6 +191,13 @@ namespace Simitone.Client.UI.Screens
                 NeighSelection(mode);
             }
         }
+
+        /// <summary>
+        /// Use this function to change the game language at runtime.
+        /// </summary>
+        public void RuntimeChangeLanguage(STRLangCode NewLanguage) => 
+            UITransDialog.CreateWithCustomUIIcon("opt_lang.png", () => (GameFacade.Game as SimitoneGame)?.ChangeLanguage(NewLanguage));
+
         public int? MoveInFamily;
 
         public void StartMoveIn(int familyID)
@@ -228,7 +239,7 @@ namespace Simitone.Client.UI.Screens
             };
             Add(TS1NeighPanel);
             Add(switcher);
-            Bg.Visible = true;
+            Bg.Visible = true;            
         }
 
         public void PlayHouse(short house, UIElement switcher)
@@ -278,12 +289,12 @@ namespace Simitone.Client.UI.Screens
             //please be aware that as of this point the neighborhood changes are now saved.
             TS1NeighPanel.SelectHouse(houseID);
         }
-
+        
         public override void GameResized()
         {
             base.GameResized();
             Bg.Position = (new Vector2(ScreenWidth, ScreenHeight)) / 2;
-            World?.GameResized();
+            World?.GameResized();            
         }
 
         public void Initialize(string propertyName, bool external)
@@ -294,6 +305,18 @@ namespace Simitone.Client.UI.Screens
         }
 
         private int SwitchLot = -1;
+
+        /// <summary>
+        /// Opens a new <see cref="UIOptionsAlert"/>
+        /// </summary>
+        public void ShowOptionsDialog()
+        {
+            if (_openOptionsDialog != null)
+                UIScreen.RemoveDialog(_openOptionsDialog);
+
+            _openOptionsDialog = new UIOptionsAlert(GlobalSettings.Default);
+            UIScreen.GlobalShowDialog(_openOptionsDialog, true);
+        }
 
         public void ChangeSpeedTo(int speed)
         {

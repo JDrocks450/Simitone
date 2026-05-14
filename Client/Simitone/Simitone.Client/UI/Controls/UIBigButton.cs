@@ -3,6 +3,7 @@ using FSO.Client.UI.Controls;
 using FSO.Client.UI.Framework;
 using FSO.Content;
 using Simitone.Client.UI.Model;
+using Simitone.Client.UI.Screens;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,12 +19,15 @@ namespace Simitone.Client.UI.Controls
 
         public UIBigButton(bool green) : base()
         {
+            bool Desktop = (UIScreen.Current as TS1GameScreen).Desktop;
+            string texRef = Desktop ? (green ? "greenbutton.png" : "button.png") : (green ? "greenbutton.mobile.png" : "button.mobile.png");
+
             CaptionStyle = CaptionStyle.Clone();
-            CaptionStyle.Size = 37;
+            CaptionStyle.Size = Desktop ? 14 : 37;
             CaptionStyle.Color = green ? UIStyle.Current.GreenBtnTxt : UIStyle.Current.BtnTxt;
             CaptionStyle.DisabledColor = UIStyle.Current.BtnDisable;
             CaptionStyle.HighlightedColor = green ? UIStyle.Current.BtnPrimaryHighlight : UIStyle.Current.BtnNormalHighlight;
-            Texture = Content.Get().CustomUI.Get(green ? "greenbutton.png" : "button.png").Get(GameFacade.GraphicsDevice);
+            Texture = Content.Get().CustomUI.Get(texRef).Get(GameFacade.GraphicsDevice);               
         }
 
         private void SetGhostText()

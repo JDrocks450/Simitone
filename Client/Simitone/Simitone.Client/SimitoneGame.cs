@@ -23,6 +23,7 @@ using FSO.SimAntics;
 using MSDFData;
 using FSO.LotView.Model;
 using Simitone.Client.UI.Panels;
+using FSO.Files.Formats.IFF.Chunks;
 
 namespace Simitone.Client
 {
@@ -38,6 +39,11 @@ namespace Simitone.Client
         public UILayer uiLayer;
         public _3DLayer SceneMgr;
         private bool HasUpdated;
+
+        /// <summary>
+        /// The current language setting of this Simitone game
+        /// </summary>
+        public STRLangCode CurrentLanguage { get; private set; } = STRLangCode.EnglishUS;
 
         public SimitoneGame() : base()
         {
@@ -97,7 +103,6 @@ namespace Simitone.Client
         /// </summary>
         protected override void Initialize()
         {
-
             var settings = GlobalSettings.Default;
             if (FSOEnvironment.DPIScaleFactor != 1 || FSOEnvironment.SoftwareDepth)
             {
@@ -165,8 +170,7 @@ namespace Simitone.Client
             hit.SetMasterVolume(HITVolumeGroup.VOX, GlobalSettings.Default.VoxVolume / 10f);
             hit.SetMasterVolume(HITVolumeGroup.AMBIENCE, GlobalSettings.Default.AmbienceVolume / 10f);
 
-            ContentStrings.TS1 = true;
-            GameFacade.Strings = new ContentStrings();
+            ChangeLanguage((STRLangCode)settings.LanguageCode);
 
             GraphicsDevice.RasterizerState = new RasterizerState() { CullMode = CullMode.None };
 
@@ -191,6 +195,16 @@ namespace Simitone.Client
             {
                 GameFacade.GraphicsDeviceManager.ToggleFullScreen();
             }
+        }
+
+        internal void ChangeLanguage(STRLangCode NewLanguage)
+        {
+            //check if this language is already loaded.
+            if (GameFacade.Strings != null && CurrentLanguage == NewLanguage) return;
+            CurrentLanguage = NewLanguage;
+            
+            ContentStrings.TS1 = true;            
+            GameFacade.Strings = new ContentStrings(CurrentLanguage);
         }
 
         private void SaveGraphicsModePreference(GlobalGraphicsMode obj)
